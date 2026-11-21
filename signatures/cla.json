@@ -1,3 +1,13 @@
 {
-  "signed": []
+  "signed": [
+    {
+      "login": "ZehuaZhang",
+      "id": 15708284,
+      "signedAt": "2026-11-21T09:11:33.620Z",
+      "comment": "https://github.com/hubnx/cla-test/pull/1#issuecomment-7060404594",
+      "repository": "hubnx/cla-test",
+      "pullRequest": 1,
+      "agreement": "df0fc7c2403c7f6b3da1f5321c1d1eca9a8dcc43"
+    }
+  ]
 }
