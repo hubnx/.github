@@ -5,10 +5,10 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { askComment, mustSign, readSignatures, recordSignature, signingSentence, signs, unsigned, withSignature, type Signature, type Signatures } from "./cla.ts";
+import { askComment, exemptFrom, mustSign, readExempt, readSignatures, recordSignature, signingSentence, signs, unsigned, withSignature, type Signature, type Signatures } from "./cla.ts";
 
 const none: Signatures = { signed: [] };
-const exempt = { bots: ["dependabot[bot]"], corporate: ["acme-dev"] };
+const exempt = { bots: ["dependabot[bot]"], corporate: [{ login: "acme-dev", id: 2 }] };
 const nobodyWrites = () => false;
 const agreement = { repository: "hubnx/.github", commit: "0123456789abcdef0123456789abcdef01234567", contact: "video@hubnx.com" };
 
@@ -33,6 +33,18 @@ describe("the CLA", () => {
   it("exempts by the explicit list (bots, a company's people with its Corporate CLA on file) and write access, never by guessing from a name", () => {
     const authors = [{ login: "dependabot[bot]", id: 1, email: "x" }, { login: "acme-dev", id: 2, email: "y" }, { login: "maintainer", id: 3, email: "z" }, { login: "other[bot]", id: 4, email: "w" }];
     expect(unsigned(authors, none, exempt, (login) => login === "maintainer")).toEqual(["@other[bot]"]);
+  });
+
+  it("covers a company's people by account id: a covered member who renamed still counts, a new owner of a let-go login doesn't", () => {
+    expect(unsigned([{ login: "acme-dev-renamed", id: 2, email: "x" }], none, exempt, nobodyWrites)).toEqual([]);
+    expect(unsigned([{ login: "acme-dev", id: 9, email: "y" }], none, exempt, nobodyWrites)).toEqual(["@acme-dev"]);
+  });
+
+  it("refuses loudly an exempt list that names a covered person without an account id", () => {
+    expect(exemptFrom(exempt)).toEqual(exempt);
+    expect(() => exemptFrom({ bots: [], corporate: ["acme-dev"] })).toThrow("CLA_EXEMPT_INVALID");
+    expect(() => exemptFrom({ bots: [], corporate: [{ login: "acme-dev" }] })).toThrow("CLA_EXEMPT_INVALID");
+    expect(() => exemptFrom({ bots: ["dependabot[bot]"] })).toThrow("CLA_EXEMPT_INVALID");
   });
 
   it("asks the account that opened the pull request too: a commit email borrowed from a signer or a bot doesn't sign for it", () => {
@@ -91,6 +103,13 @@ describe("recording a signature in the one list (a git branch every repository p
     recordSignature(fast, signature("ada", 1));
     expect(recordSignature(slow, signature("sam", 7)).signed.map((each) => each.login)).toEqual(["ada", "sam"]);
     expect(readSignatures(clone("after")).signed.map((each) => each.login)).toEqual(["ada", "sam"]);
+  });
+
+  it("reads the exempt list from the branch, and refuses it written the old way, a covered person by login alone", () => {
+    expect(readExempt(clone("runner"))).toEqual(exempt);
+    const old = clone("old");
+    writeFileSync(path.join(old, "exempt.json"), `${JSON.stringify({ bots: [], corporate: ["acme-dev"] })}\n`);
+    expect(() => readExempt(old)).toThrow("CLA_EXEMPT_INVALID");
   });
 
   it("writes nothing when the account has signed already", () => {

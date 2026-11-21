@@ -41,8 +41,24 @@ export type Signature = {
   readonly agreement: string;
 };
 export type Signatures = { readonly signed: readonly Signature[] };
-/** Exempt by an explicit list, never guessed from a name: bots by login, companies whose Corporate CLA is on file by member login. */
-export type Exempt = { readonly bots: readonly string[]; readonly corporate: readonly string[] };
+/**
+ * Exempt by an explicit list, never guessed from a name (exempt.json on the `cla-signatures` branch): bots by login,
+ * since a login ending in [bot] belongs to a GitHub App, which no person can register; the people a company's Corporate
+ * CLA on file covers (its Schedule A) by account id, as signatures are (a login let go can be taken over), their login
+ * kept only for a person reading the list. When a Corporate CLA arrives, each Schedule A login's id is
+ * `gh api users/<login> --jq .id`, read that day.
+ */
+export type Exempt = { readonly bots: readonly string[]; readonly corporate: readonly { readonly login: string; readonly id: number }[] };
+
+/** The exempt list as written, refused loudly when a covered person has no account id (a bare login never counts). */
+export function exemptFrom(json: unknown): Exempt {
+  const given = json as { bots?: unknown; corporate?: unknown } | null;
+  const bots = given?.bots;
+  const corporate = given?.corporate;
+  const valid = Array.isArray(bots) && bots.every((login) => typeof login === "string") && Array.isArray(corporate) && corporate.every((member) => typeof (member as { login?: unknown })?.login === "string" && Number.isInteger((member as { id?: unknown })?.id));
+  if (!valid) throw new Error(`CLA_EXEMPT_INVALID: exempt.json on the ${branch} branch needs "bots": [login, …] and "corporate": [{ "login": …, "id": <account id> }, …]`);
+  return { bots: bots as string[], corporate: corporate as { login: string; id: number }[] };
+}
 /** Someone who must have signed: a GitHub account (login and id), or an address no account is linked to. */
 export type Author = { readonly login: string | null; readonly id: number | null; readonly email: string };
 
@@ -61,14 +77,16 @@ export function mustSign(opener: { readonly login: string; readonly id: number }
 }
 
 /** Who still has to sign, in words a person reads: by login, or by address when the commit isn't linked to an account.
- * A signature counts by account id, so a renamed account stays signed and a login someone gives up signs nothing. */
+ * A signature, and a company's cover, count by account id, so a renamed account stays signed and a login someone gives
+ * up signs nothing. */
 export function unsigned(authors: readonly Author[], signatures: Signatures, exempt: Exempt, canWrite: (login: string) => boolean): string[] {
   const signed = new Set(signatures.signed.map((signature) => signature.id));
-  const listed = new Set([...exempt.bots, ...exempt.corporate].map((login) => login.toLowerCase()));
+  const covered = new Set(exempt.corporate.map((member) => member.id));
+  const bots = new Set(exempt.bots.map((login) => login.toLowerCase()));
   const missing = new Set<string>();
   for (const author of authors) {
     if (author.login === null || author.id === null) missing.add(`${author.email} (a commit not linked to a GitHub account)`);
-    else if (!signed.has(author.id) && !listed.has(author.login.toLowerCase()) && !canWrite(author.login)) missing.add(`@${author.login}`);
+    else if (!signed.has(author.id) && !covered.has(author.id) && !bots.has(author.login.toLowerCase()) && !canWrite(author.login)) missing.add(`@${author.login}`);
   }
   return [...missing];
 }
@@ -88,8 +106,8 @@ export function readSignatures(checkout: string): Signatures {
   return JSON.parse(readFileSync(path.join(checkout, file), "utf8")) as Signatures;
 }
 
-function readExempt(checkout: string): Exempt {
-  return JSON.parse(readFileSync(path.join(checkout, "exempt.json"), "utf8")) as Exempt;
+export function readExempt(checkout: string): Exempt {
+  return exemptFrom(JSON.parse(readFileSync(path.join(checkout, "exempt.json"), "utf8")));
 }
 
 /** GitHub lists at most this many of a pull request's commits. */

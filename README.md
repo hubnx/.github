@@ -7,10 +7,13 @@ HubNX, Inc.'s contributor license agreement (CLA), shared by every HubNX project
 
 - [Individual CLA](cla/individual.md) and [Corporate CLA](cla/corporate.md): the Apache Software Foundation's
   Individual Contributor License Agreement (v2.2) and Software Grant and Corporate Contributor License Agreement
-  (r190612). Every numbered clause is Apache's, word for word, with HubNX, Inc. for the Foundation. What differs:
-  the one custom change below; Apache's instructions, its signer fields (name, address, e-mail) and its "read this
-  document carefully" line, replaced by how to sign here, on GitHub; each title leaves out Apache's `("Agreement")`
-  and version label (the version is named in the note at the top).
+  (r190612). Every numbered clause, each title with its `("Agreement")` and version label, and each "read this document
+  carefully" line are Apache's, word for word, with HubNX, Inc. for the Foundation, and HubNX's name and
+  https://www.hubnx.com/ where the corporate header has the Foundation's. What differs: the one custom change below,
+  and Apache's instructions for sending the form in, replaced by how to sign here (the individual one's signer fields
+  and signing lines with them, since a comment on GitHub signs). The text is hubnx Agent's own copy but for what a
+  shared list must say: where the signatures are kept and that each records the agreements' commit, and that a company
+  emails its project's support address.
 - **Why**: HubNX's open-source apps are under the AGPL-3.0. The agreement lets HubNX also ship contributions in the app
   stores and offer them under other licenses. You keep every right to use your own contributions.
 - **One signature counts everywhere**: the agreement covers "any of the products owned or managed by HubNX, Inc.", and
@@ -35,8 +38,11 @@ HubNX, Inc.'s contributor license agreement (CLA), shared by every HubNX project
 - A commit whose email isn't linked to a GitHub account can't be signed for: its author adds the email to their account
   (GitHub › Settings › Emails), or makes the commit again with one that is.
 - **Exempt** by an explicit list, [`exempt.json`](https://github.com/hubnx/.github/blob/cla-signatures/exempt.json) on
-  the same branch, read as it is now by every repository: bots by login, and the designated employees of a company
-  whose Corporate CLA is on file (Schedule A), by login.
+  the same branch, read as it is now by every repository: bots by login (a `[bot]` login belongs to a GitHub App, which
+  no person can register), and the designated employees of a company whose Corporate CLA is on file (Schedule A) by
+  account id, as signatures are, since a login someone lets go can be taken over. Each is `{ "login": …, "id": … }`,
+  the login only for a person reading it; read the id with `gh api users/<login> --jq .id` the day the Corporate CLA
+  arrives. A list written any other way fails every check, `CLA_EXEMPT_INVALID`.
 
 ## Use it in a repository
 
