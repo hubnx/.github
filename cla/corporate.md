@@ -1,7 +1,8 @@
 # Software Grant and Corporate Contributor License Agreement
 
-> Apache's Software Grant and Corporate Contributor License Agreement (r190612), every clause unchanged. Only the
-> party's name and the "how to sign" instructions differ from Apache's text.
+> Apache's Software Grant and Corporate Contributor License Agreement (r190612), with HubNX, Inc. as the party and
+> Apache's instructions replaced by how to sign here. One custom change: Apache's sentence about the Foundation's
+> nonprofit status is dropped. README.md lists every difference from Apache's text.
 
 **How to sign:** fill in the fields below, sign the Agreement, and email it to the support address of the HubNX project
 you contribute to (its CONTRIBUTING.md names it). Schedule A lists your designated employees by name and GitHub login;
@@ -28,12 +29,9 @@ E-Mail: ______________________________
 
 Telephone: ______________________________
 
-You accept and agree to the following terms and conditions for Your present and future Contributions submitted to
-HubNX, Inc. [UNDECIDED, see README.md: Apache's sentence "In return, the Foundation shall not use Your Contributions in a way
-that is contrary to the public benefit or inconsistent with its nonprofit status and bylaws in effect at the time of the
-Contribution." is recommended dropped: HubNX, Inc. has no nonprofit status.] Except for the license granted herein to
-HubNX, Inc. and recipients of software distributed by HubNX, Inc., You reserve all right, title, and interest in and to
-Your Contributions.
+You accept and agree to the following terms and conditions for Your present and future Contributions submitted to HubNX,
+Inc. Except for the license granted herein to HubNX, Inc. and recipients of software distributed by HubNX, Inc., You
+reserve all right, title, and interest in and to Your Contributions.
 
 1. Definitions.
 

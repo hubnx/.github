@@ -8,19 +8,19 @@ HubNX, Inc.'s contributor license agreement (CLA), shared by every HubNX project
 - [Individual CLA](cla/individual.md) and [Corporate CLA](cla/corporate.md): the Apache Software Foundation's
   Individual Contributor License Agreement (v2.2) and Software Grant and Corporate Contributor License Agreement
   (r190612). Every numbered clause is Apache's, word for word, with HubNX, Inc. for the Foundation. What differs:
-  Apache's instructions, its signer fields (name, address, e-mail) and its "read this document carefully" line are
-  replaced by how to sign here, on GitHub; each title leaves out Apache's `("Agreement")` and version label (the
-  version is named in the note at the top); Schedule A asks for each employee's GitHub login; and the nonprofit
-  sentence below is marked, not kept.
+  the one custom change below; Apache's instructions, its signer fields (name, address, e-mail) and its "read this
+  document carefully" line, replaced by how to sign here, on GitHub; each title leaves out Apache's `("Agreement")`
+  and version label (the version is named in the note at the top); and Schedule A asks for each employee's GitHub
+  login.
 - **Why**: HubNX's open-source apps are under the AGPL-3.0. The agreement lets HubNX also ship contributions in the app
   stores and offer them under other licenses. You keep every right to use your own contributions.
 - **One signature counts everywhere**: the agreement covers "any of the products owned or managed by HubNX, Inc.", and
   every repository's workflow reads and writes the one list of signers here.
-- **Not yet decided**: Apache's agreements carry a sentence that fits only a nonprofit: "In return, the Foundation
-  shall not use Your Contributions in a way that is contrary to the public benefit or inconsistent with its nonprofit
-  status and bylaws in effect at the time of the Contribution." HubNX, Inc. has no nonprofit status. Whether it is
-  dropped (recommended) or replaced is still open, so both documents mark its place. Each signature records the commit
-  of the documents its signer was shown.
+- **One custom change to Apache's text**: its nonprofit sentence is dropped from both agreements (decided by HubNX,
+  2026-11-21): "In return, the Foundation shall not use Your Contributions in a way that is contrary to the public
+  benefit or inconsistent with its nonprofit status and bylaws in effect at the time of the Contribution." With a
+  company named in it, it could be read as forbidding the paid licenses the agreement allows. Each signature records
+  the commit of the documents its signer was shown.
 
 ## How signing works
 
