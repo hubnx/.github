@@ -7,8 +7,11 @@ HubNX, Inc.'s contributor license agreement (CLA), shared by every HubNX project
 
 - [Individual CLA](cla/individual.md) and [Corporate CLA](cla/corporate.md): the Apache Software Foundation's
   Individual Contributor License Agreement (v2.2) and Software Grant and Corporate Contributor License Agreement
-  (r190612), every clause word for word, with HubNX, Inc. as the party and Apache's instructions replaced by how to
-  sign here.
+  (r190612). Every numbered clause is Apache's, word for word, with HubNX, Inc. for the Foundation. What differs:
+  Apache's instructions, its signer fields (name, address, e-mail) and its "read this document carefully" line are
+  replaced by how to sign here, on GitHub; each title leaves out Apache's `("Agreement")` and version label (the
+  version is named in the note at the top); Schedule A asks for each employee's GitHub login; and the nonprofit
+  sentence below is marked, not kept.
 - **Why**: HubNX's open-source apps are under the AGPL-3.0. The agreement lets HubNX also ship contributions in the app
   stores and offer them under other licenses. You keep every right to use your own contributions.
 - **One signature counts everywhere**: the agreement covers "any of the products owned or managed by HubNX, Inc.", and
@@ -21,16 +24,20 @@ HubNX, Inc.'s contributor license agreement (CLA), shared by every HubNX project
 
 ## How signing works
 
-- On a pull request, every commit's author must have signed, be exempt, or have write access to that repository.
-  The pull request shows a **CLA** status, and the workflow comments once with the sentence to post.
+- On a pull request, the account that opened it and every commit's author must have signed, be exempt, or have write
+  access to that repository. (GitHub names a commit's author from its email, which anyone can set, so the opener
+  counts too.) The pull request shows a **CLA** status, and the workflow comments once with the sentence to post.
 - **To sign**, post exactly this comment on the pull request: *I have read the CLA and I agree to it.*
 - The signature goes into [`signatures/cla.json`](https://github.com/hubnx/.github/blob/cla-signatures/signatures/cla.json) on this repository's
   `cla-signatures` branch, publicly: the GitHub login and account id, the time, the comment's link, the repository and
-  pull request, and the commit of the agreements.
+  pull request, and the commit of the agreements. A signature counts by account id, so it survives a renamed account.
+- Signed, with other pull requests still waiting? Post the sentence on each: it records nothing new and brings that
+  pull request's status up to date.
 - A commit whose email isn't linked to a GitHub account can't be signed for: its author adds the email to their account
   (GitHub › Settings › Emails), or makes the commit again with one that is.
-- **Exempt** by an explicit list, [`cla/exempt.json`](cla/exempt.json): bots by login, and the designated employees of
-  a company whose Corporate CLA is on file (Schedule A), by login.
+- **Exempt** by an explicit list, [`exempt.json`](https://github.com/hubnx/.github/blob/cla-signatures/exempt.json) on
+  the same branch, read as it is now by every repository: bots by login, and the designated employees of a company
+  whose Corporate CLA is on file (Schedule A), by login.
 
 ## Use it in a repository
 
@@ -76,7 +83,8 @@ HubNX, Inc.'s contributor license agreement (CLA), shared by every HubNX project
   (`job.workflow_sha`) and reads the pull request only through GitHub's API. Comment text reaches the script through
   the environment, never into a command line.
 - The key that may push signatures is handed only to a signing comment's run. It is a deploy key on this repository
-  alone, and the rulesets keep it off `main` and keep `cla-signatures` from being force-pushed or deleted.
+  alone, and the rulesets let it do one thing: add commits to `cla-signatures`. Every other branch and every tag is for
+  admins only, and `cla-signatures` can't be force-pushed or deleted, so its history keeps every change.
 
 ## Tests
 

@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { askComment, readSignatures, recordSignature, signingSentence, signs, unsigned, withSignature, type Signature, type Signatures } from "./cla.ts";
+import { askComment, mustSign, readSignatures, recordSignature, signingSentence, signs, unsigned, withSignature, type Signature, type Signatures } from "./cla.ts";
 
 const none: Signatures = { signed: [] };
 const exempt = { bots: ["dependabot[bot]"], corporate: ["acme-dev"] };
@@ -26,19 +26,27 @@ describe("the CLA", () => {
   });
 
   it("asks everyone who hasn't signed, by login or by the address a commit isn't linked to an account with", () => {
-    const authors = [{ login: "sam", email: "sam@example.com" }, { login: null, email: "anon@example.com" }, { login: "sam", email: "sam@example.com" }];
+    const authors = [{ login: "sam", id: 7, email: "sam@example.com" }, { login: null, id: null, email: "anon@example.com" }, { login: "sam", id: 7, email: "sam@example.com" }];
     expect(unsigned(authors, none, exempt, nobodyWrites)).toEqual(["@sam", "anon@example.com (a commit not linked to a GitHub account)"]);
   });
 
   it("exempts by the explicit list (bots, a company's people with its Corporate CLA on file) and write access, never by guessing from a name", () => {
-    const authors = [{ login: "dependabot[bot]", email: "x" }, { login: "acme-dev", email: "y" }, { login: "maintainer", email: "z" }, { login: "other[bot]", email: "w" }];
+    const authors = [{ login: "dependabot[bot]", id: 1, email: "x" }, { login: "acme-dev", id: 2, email: "y" }, { login: "maintainer", id: 3, email: "z" }, { login: "other[bot]", id: 4, email: "w" }];
     expect(unsigned(authors, none, exempt, (login) => login === "maintainer")).toEqual(["@other[bot]"]);
   });
 
-  it("counts a signature once per account, whatever the login's case and whichever repository it signed in", () => {
+  it("asks the account that opened the pull request too: a commit email borrowed from a signer or a bot doesn't sign for it", () => {
+    const signed = withSignature(none, signature("ada", 1));
+    const borrowed = [{ login: "ada", id: 1, email: "1+ada@users.noreply.github.com" }, { login: "dependabot[bot]", id: 2, email: "bot@example.com" }];
+    expect(unsigned(mustSign({ login: "mallory", id: 9 }, borrowed), signed, exempt, nobodyWrites)).toEqual(["@mallory"]);
+    expect(unsigned(mustSign({ login: "ada", id: 1 }, borrowed), signed, exempt, nobodyWrites)).toEqual([]);
+  });
+
+  it("counts a signature once per account, by its id: whichever repository it signed in, and after the account is renamed", () => {
     const one = withSignature(none, signature("Sam", 7));
     expect(withSignature(one, { ...signature("Sam", 7, 2), repository: "hubnx/music" })).toBe(one);
-    expect(unsigned([{ login: "sam", email: "x" }], one, exempt, nobodyWrites)).toEqual([]);
+    expect(unsigned([{ login: "sam-renamed", id: 7, email: "x" }], one, exempt, nobodyWrites)).toEqual([]);
+    expect(unsigned([{ login: "Sam", id: 8, email: "x" }], one, exempt, nobodyWrites)).toEqual(["@Sam"]);
   });
 
   it("asks in one friendly, clear line, with the sentence to post and the agreements at the commit the signer is shown", () => {
@@ -63,6 +71,7 @@ describe("recording a signature in the one list (a git branch every repository p
     const seed = path.join(folder, "seed");
     mkdirSync(path.join(seed, "signatures"), { recursive: true });
     writeFileSync(path.join(seed, "signatures", "cla.json"), `${JSON.stringify(none)}\n`);
+    writeFileSync(path.join(seed, "exempt.json"), `${JSON.stringify(exempt)}\n`);
     run(seed, "init", "-q");
     run(seed, "add", ".");
     run(seed, "commit", "-q", "-m", "The signatures");

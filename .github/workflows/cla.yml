@@ -1,6 +1,6 @@
 # The contributor license agreement's check, called by every HubNX repository that takes outside pull requests
-# (README.md › Use it in a repository): on a pull request, every commit author must have signed or be exempt; a comment
-# that is exactly the sentence signs, once for every repository.
+# (README.md › Use it in a repository): on a pull request, its opener and every commit author must have signed or be
+# exempt; a comment that is exactly the sentence signs, once for every repository.
 #
 # It runs on the caller's pull_request_target and issue_comment events, which use the caller's own base branch, and
 # runs this repository's code at the commit the caller pinned (job.workflow_sha), never the pull request's: nothing of

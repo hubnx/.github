@@ -11,7 +11,8 @@
  *   node cla/cla.ts sign    (the same, and COMMENT_ID, COMMENTER, COMMENTER_ID, BODY, SIGNATURES_KEY_SET; SIGNATURES must
  *                            be able to push)
  *
- * SIGNATURES is a checkout of the `cla-signatures` branch.
+ * SIGNATURES is a checkout of the `cla-signatures` branch, which holds the signatures and the exempt list: both are read
+ * as they are now, whichever commit of this repository the caller pinned.
  */
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
@@ -42,22 +43,32 @@ export type Signature = {
 export type Signatures = { readonly signed: readonly Signature[] };
 /** Exempt by an explicit list, never guessed from a name: bots by login, companies whose Corporate CLA is on file by member login. */
 export type Exempt = { readonly bots: readonly string[]; readonly corporate: readonly string[] };
-/** A commit's author: a GitHub account, or an address no account is linked to. */
-export type Author = { readonly login: string | null; readonly email: string };
+/** Someone who must have signed: a GitHub account (login and id), or an address no account is linked to. */
+export type Author = { readonly login: string | null; readonly id: number | null; readonly email: string };
 
 /** Whether a comment signs: the sentence alone, its spacing at either end aside. */
 export function signs(body: string): boolean {
   return body.trim() === signingSentence;
 }
 
-/** Who still has to sign, in words a person reads: by login, or by address when the commit isn't linked to an account. */
+/**
+ * Everyone who must have signed for a pull request: the account that opened it, then each commit's author. GitHub
+ * names a commit's author from its email alone, so a borrowed address (a signer's, a bot's) can make a commit look
+ * like someone else's; the opener is the account actually submitting it, and can't be borrowed.
+ */
+export function mustSign(opener: { readonly login: string; readonly id: number }, commitAuthors: readonly Author[]): Author[] {
+  return [{ login: opener.login, id: opener.id, email: "" }, ...commitAuthors];
+}
+
+/** Who still has to sign, in words a person reads: by login, or by address when the commit isn't linked to an account.
+ * A signature counts by account id, so a renamed account stays signed and a login someone gives up signs nothing. */
 export function unsigned(authors: readonly Author[], signatures: Signatures, exempt: Exempt, canWrite: (login: string) => boolean): string[] {
-  const signed = new Set(signatures.signed.map((signature) => signature.login.toLowerCase()));
+  const signed = new Set(signatures.signed.map((signature) => signature.id));
   const listed = new Set([...exempt.bots, ...exempt.corporate].map((login) => login.toLowerCase()));
   const missing = new Set<string>();
   for (const author of authors) {
-    if (author.login === null) missing.add(`${author.email} (a commit not linked to a GitHub account)`);
-    else if (!signed.has(author.login.toLowerCase()) && !listed.has(author.login.toLowerCase()) && !canWrite(author.login)) missing.add(`@${author.login}`);
+    if (author.login === null || author.id === null) missing.add(`${author.email} (a commit not linked to a GitHub account)`);
+    else if (!signed.has(author.id) && !listed.has(author.login.toLowerCase()) && !canWrite(author.login)) missing.add(`@${author.login}`);
   }
   return [...missing];
 }
@@ -76,6 +87,13 @@ const pushAttempts = 5;
 export function readSignatures(checkout: string): Signatures {
   return JSON.parse(readFileSync(path.join(checkout, file), "utf8")) as Signatures;
 }
+
+function readExempt(checkout: string): Exempt {
+  return JSON.parse(readFileSync(path.join(checkout, "exempt.json"), "utf8")) as Exempt;
+}
+
+/** GitHub lists at most this many of a pull request's commits. */
+const listedCommits = 250;
 
 function git(checkout: string, args: readonly string[]): void {
   // Piped, so a failure's message (a push refused, say) travels in the error.
@@ -115,18 +133,23 @@ function canWriteIn(repo: string): (login: string) => boolean {
   return (login) => {
     try {
       return ["admin", "maintain", "write"].includes(ghJson<{ permission: string }>([`repos/${repo}/collaborators/${login}/permission`]).permission);
-    } catch {
-      // Not a collaborator: GitHub answers 404, and someone without access has to sign.
+    } catch (error) {
+      // Not a collaborator: GitHub answers 404, and someone without access has to sign. Anything else is logged, and
+      // the person is asked to sign, which a maintainer can see past.
+      if (!String(error instanceof Error && "stderr" in error ? error.stderr : error).includes("HTTP 404")) console.error("CLA_PERMISSION_CHECK_FAILED", login, error);
       return false;
     }
   };
 }
 
-function check(repo: string, pr: number, signatures: Signatures, agreement: Agreement): void {
-  const authors = ghJson<{ author: { login: string } | null; commit: { author: { email: string } } }[]>(["--paginate", `repos/${repo}/pulls/${pr}/commits`]).map((each) => ({ login: each.author?.login ?? null, email: each.commit.author.email }));
-  const exempt = JSON.parse(readFileSync(path.join(import.meta.dirname, "exempt.json"), "utf8")) as Exempt;
-  const missing = unsigned(authors, signatures, exempt, canWriteIn(repo));
-  const head = ghJson<{ head: { sha: string } }>([`repos/${repo}/pulls/${pr}`]).head.sha;
+function check(repo: string, pr: number, checkout: string, signatures: Signatures, agreement: Agreement): void {
+  // The head first: commits pushed while this runs are then read too, so a status never vouches for commits it didn't see.
+  const pull = ghJson<{ head: { sha: string }; user: { login: string; id: number }; commits: number }>([`repos/${repo}/pulls/${pr}`]);
+  const head = pull.head.sha;
+  const commitAuthors = ghJson<{ author: { login: string; id: number } | null; commit: { author: { email: string } } }[]>(["--paginate", `repos/${repo}/pulls/${pr}/commits`])
+    .map((each) => ({ login: each.author?.login ?? null, id: each.author?.id ?? null, email: each.commit.author.email }));
+  const missing = unsigned(mustSign(pull.user, commitAuthors), signatures, readExempt(checkout), canWriteIn(repo));
+  if (pull.commits > listedCommits) missing.push(`the authors of commits after the first ${listedCommits}, which GitHub doesn't list (a maintainer checks them)`);
   gh(["api", "-X", "POST", `repos/${repo}/statuses/${head}`, "-f", "context=CLA", "-f", `state=${missing.length === 0 ? "success" : "pending"}`, "-f", `description=${missing.length === 0 ? "Everyone has signed the CLA" : `Waiting for: ${missing.join(", ")}`.slice(0, 140)}`]);
   if (missing.length === 0) return;
   const comments = ghJson<{ body: string }[]>(["--paginate", `repos/${repo}/issues/${pr}/comments`]);
@@ -148,7 +171,7 @@ function sign(repo: string, pr: number, checkout: string, agreement: Agreement, 
     agreement: agreement.commit,
   };
   if (!signature.login || !Number.isInteger(signature.id)) throw new Error("CLA_INPUT: COMMENTER and COMMENTER_ID are needed to sign");
-  check(repo, pr, recordSignature(checkout, signature), agreement);
+  check(repo, pr, checkout, recordSignature(checkout, signature), agreement);
 }
 
 if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
@@ -160,7 +183,7 @@ if (process.argv[1] && path.resolve(process.argv[1]) === import.meta.filename) {
   if (!checkout || !agreement.repository || !/^[0-9a-f]{40}$/.test(agreement.commit) || !agreement.contact.includes("@")) {
     throw new Error("CLA_INPUT: SIGNATURES, AGREEMENT_REPO, AGREEMENT_COMMIT (a full commit SHA) and CONTACT are needed");
   }
-  if (process.argv[2] === "check") check(repo, pr, readSignatures(checkout), agreement);
+  if (process.argv[2] === "check") check(repo, pr, checkout, readSignatures(checkout), agreement);
   else if (process.argv[2] === "sign") sign(repo, pr, checkout, agreement, process.env);
   else throw new Error(`CLA_COMMAND: "${process.argv[2] ?? ""}" isn't check or sign`);
 }

@@ -1,6 +1,6 @@
 #!/bin/sh
 # Lets a repository's CLA workflow record signatures (README.md › Use it in a repository): a deploy key of its own on
-# hubnx/.github, which may push (the rulesets keep it to the cla-signatures branch), with its private half set as that
+# hubnx/.github, which may push (the rulesets let it add commits to cla-signatures only), with its private half set as that
 # repository's CLA_SIGNATURES_KEY secret and never kept anywhere else. Run once per repository, by someone who
 # administers both, with the GitHub CLI signed in. Deleting that deploy key stops the repository signing.
 #
