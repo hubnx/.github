@@ -1,4 +1,4 @@
-# Individual Contributor License Agreement
+# Individual Contributor License Agreement ("Agreement") V2.2
 
 > Apache's Individual Contributor License Agreement (v2.2), every clause unchanged but one sentence. Only the party's
 > name, the "how to sign" instructions and that sentence differ from Apache's text. The sentence is removed because it
@@ -6,9 +6,9 @@
 > public benefit or inconsistent with its nonprofit status and bylaws in effect at the time of the Contribution."
 
 **How to sign:** post this comment on your pull request: *I have read the CLA and I agree to it.* Signing records your
-GitHub login, the time, a link to your comment and the commit of this text, publicly, in hubnx/.github
-(`signatures/cla.json` on its `cla-signatures` branch). One signature covers every HubNX repository. Signing for a
-company? Use the [Corporate CLA](corporate.md).
+GitHub login and account ID, the time, the pull request and a link to your comment, and the commit of this text,
+publicly, in hubnx/.github (`signatures/cla.json` on its `cla-signatures` branch). Signing for a company? Use the
+[Corporate CLA](corporate.md).
 
 ---
 
@@ -17,6 +17,8 @@ any person or entity, HubNX, Inc. must have on file a signed Contributor License
 indicating agreement with the license terms below. This agreement is for your protection as a Contributor as well as the
 protection of HubNX, Inc. and its users. It does not change your rights to use your own Contributions for any other
 purpose.
+
+Read this document carefully before signing and keep a copy for your records.
 
 You accept and agree to the following terms and conditions for Your Contributions (present and future) that you submit
 to HubNX, Inc. Except for the license granted herein to HubNX, Inc. and recipients of software distributed by HubNX,

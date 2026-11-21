@@ -1,4 +1,10 @@
-# Software Grant and Corporate Contributor License Agreement
+HubNX, Inc.
+
+# Software Grant and Corporate Contributor License Agreement ("Agreement")
+
+https://www.hubnx.com/
+
+(v r190612)
 
 > Apache's Software Grant and Corporate Contributor License Agreement (r190612), every clause unchanged but one
 > sentence. Only the party's name, the "how to sign" instructions and that sentence differ from Apache's text. The
@@ -8,7 +14,7 @@
 
 **How to sign:** fill in the fields below, sign the Agreement, and email it to the support address of the HubNX project
 you contribute to (its CONTRIBUTING.md names it). Schedule A lists your designated employees by name and GitHub login;
-once it's on file, their pull requests to every HubNX repository need no individual signature.
+once it's on file, their pull requests need no individual signature.
 
 ---
 
@@ -20,6 +26,8 @@ Contributions for any other purpose.
 
 This version of the Agreement allows an entity (the "Corporation") to submit Contributions to HubNX, Inc., to authorize
 Contributions submitted by its designated employees to HubNX, Inc., and to grant copyright and patent licenses thereto.
+
+Please read this document carefully before signing and keep a copy for your records.
 
 Corporation name: ______________________________
 
