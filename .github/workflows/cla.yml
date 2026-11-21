@@ -1,0 +1,68 @@
+# The contributor license agreement's check, called by every HubNX repository that takes outside pull requests
+# (README.md › Use it in a repository): on a pull request, every commit author must have signed or be exempt; a comment
+# that is exactly the sentence signs, once for every repository.
+#
+# It runs on the caller's pull_request_target and issue_comment events, which use the caller's own base branch, and
+# runs this repository's code at the commit the caller pinned (job.workflow_sha), never the pull request's: nothing of
+# the pull request is checked out, and cla/cla.ts reads it only through GitHub's API. Comment text reaches the script
+# through the environment, never into a run line. Only a comment gets the key that may push a signature.
+name: CLA
+
+on:
+  workflow_call:
+    inputs:
+      contact:
+        description: Where a company emails its signed Corporate CLA, the calling project's support address
+        type: string
+        required: true
+    secrets:
+      CLA_SIGNATURES_KEY:
+        description: The calling repository's deploy key on hubnx/.github, which may push to its cla-signatures branch
+        # Not required, so a repository's pull requests are checked before its key is made (README.md › Use it,
+        # step 2); a signing comment without it fails, saying so.
+        required: false
+
+jobs:
+  cla:
+    # A comment counts only on a pull request; the script checks the exact sentence itself.
+    if: github.event_name == 'pull_request_target' || github.event.issue.pull_request
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write # one comment asking to sign
+      statuses: write # the pull request's "CLA" status
+    steps:
+      - name: This workflow's own code, at the commit the caller pinned
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: ${{ job.workflow_sha }}
+          path: cla-workflow
+          persist-credentials: false
+      - name: The signatures, which only a signing comment may push to
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: ${{ job.workflow_repository }}
+          ref: cla-signatures
+          path: cla-signatures
+          ssh-key: ${{ github.event_name == 'issue_comment' && secrets.CLA_SIGNATURES_KEY || '' }}
+          persist-credentials: ${{ github.event_name == 'issue_comment' && secrets.CLA_SIGNATURES_KEY != '' }}
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24
+      - name: Check or sign
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          PR: ${{ github.event.pull_request.number || github.event.issue.number }}
+          CONTACT: ${{ inputs.contact }}
+          AGREEMENT_REPO: ${{ job.workflow_repository }}
+          AGREEMENT_COMMIT: ${{ job.workflow_sha }}
+          SIGNATURES: cla-signatures
+          SIGNATURES_KEY_SET: ${{ secrets.CLA_SIGNATURES_KEY != '' }}
+          COMMENT_ID: ${{ github.event.comment.id }}
+          COMMENTER: ${{ github.event.comment.user.login }}
+          COMMENTER_ID: ${{ github.event.comment.user.id }}
+          BODY: ${{ github.event.comment.body }}
+          COMMAND: ${{ github.event_name == 'issue_comment' && 'sign' || 'check' }}
+        run: node cla-workflow/cla/cla.ts "$COMMAND"
