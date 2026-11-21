@@ -1,8 +1,9 @@
 # Individual Contributor License Agreement
 
-> Apache's Individual Contributor License Agreement (v2.2), with HubNX, Inc. as the party and Apache's instructions
-> replaced by how to sign here. One custom change: Apache's sentence about the Foundation's nonprofit status is dropped.
-> README.md lists every difference from Apache's text.
+> Apache's Individual Contributor License Agreement (v2.2), every clause unchanged but one sentence. Only the party's
+> name, the "how to sign" instructions and that sentence differ from Apache's text. The sentence is removed because it
+> fits only a nonprofit: "In return, the Foundation shall not use Your Contributions in a way that is contrary to the
+> public benefit or inconsistent with its nonprofit status and bylaws in effect at the time of the Contribution."
 
 **How to sign:** post this comment on your pull request: *I have read the CLA and I agree to it.* Signing records your
 GitHub login, the time, a link to your comment and the commit of this text, publicly, in hubnx/.github

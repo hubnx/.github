@@ -10,8 +10,7 @@ HubNX, Inc.'s contributor license agreement (CLA), shared by every HubNX project
   (r190612). Every numbered clause is Apache's, word for word, with HubNX, Inc. for the Foundation. What differs:
   the one custom change below; Apache's instructions, its signer fields (name, address, e-mail) and its "read this
   document carefully" line, replaced by how to sign here, on GitHub; each title leaves out Apache's `("Agreement")`
-  and version label (the version is named in the note at the top); and Schedule A asks for each employee's GitHub
-  login.
+  and version label (the version is named in the note at the top).
 - **Why**: HubNX's open-source apps are under the AGPL-3.0. The agreement lets HubNX also ship contributions in the app
   stores and offer them under other licenses. You keep every right to use your own contributions.
 - **One signature counts everywhere**: the agreement covers "any of the products owned or managed by HubNX, Inc.", and
